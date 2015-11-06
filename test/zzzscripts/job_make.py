@@ -15,80 +15,85 @@
 #
 # ./job_make.py none TuneMBRp8 \'\' 742 mc magnetOff200kv0k
 #
+# ./job_make.py 239028 247324 \'\' 7414 1200x4_1600x10_v0 ZB1zbp0ls97to291v0k
+#
 
-import sys, math, re, subprocess, commands
-usage = 'Usage: %s argpedrun/171704 argrawrun/171702 arglistofrawfiles/root,root argcmssw/386 arghv/HighGain_38T/eq_1st argsuf/ZB1zbp0ls230to241v3' % sys.argv[0]
+import sys, math, re, subprocess, commands, os
 
-try:
-    argpedrun = sys.argv[1]
-    argledrun = sys.argv[2]
-    arglistofrawfiles = sys.argv[3]
-    argcmssw  = sys.argv[4]
-    arghv     = sys.argv[5]
-    argsuf    = sys.argv[6]
-except:
-    print usage; sys.exit(1)
+def main():
 
-dic = {'argpedrun':argpedrun, 'argledrun':argledrun, 'arglistofrawfiles':arglistofrawfiles, 'argcmssw':argcmssw, 'arghv':arghv, 'argsuf':argsuf}
+    usage = 'Usage: %s argpedrun/171704 argrawrun/171702 arglistofrawfiles/root,root argcmssw/386 arghv/HighGain_38T/eq_1st argsuf/ZB1zbp0ls230to241v3' % sys.argv[0]
 
-f1 = open('./castor_locped_cfg_template.py', 'r')
-filestr = f1.read()
+    try:
+        argpedrun = sys.argv[1]
+        argledrun = sys.argv[2]
+        arglistofrawfiles = sys.argv[3]
+        argcmssw  = sys.argv[4]
+        arghv     = sys.argv[5]
+        argsuf    = sys.argv[6]
+    except:
+        print usage; sys.exit(1)
 
-for ifrom, ito in dic.iteritems():
-    filestr = filestr.replace(ifrom,ito)
+    dic = {'argpedrun':argpedrun, 'argledrun':argledrun, 'arglistofrawfiles':arglistofrawfiles, 'argcmssw':argcmssw, 'arghv':arghv, 'argsuf':argsuf}
 
-f1.close()
+    f1 = open('./castor_locped_cfg_template.py', 'r')
+    filestr = f1.read()
 
-f1name = '../castor_locped_cfg_{0}.py'.format(argpedrun)
-f1 = open(f1name, 'w')
-f1.write(filestr)
-f1.close()
-###retcode = subprocess.call(["chmod", "+x", f1name])
+    for ifrom, ito in dic.iteritems():
+        filestr = filestr.replace(ifrom,ito)
 
-f2 = open('./castor_gloraw_cfg_template.py', 'r')
-filestr = f2.read()
+    f1.close()
 
-for ifrom, ito in dic.iteritems():
-    filestr = filestr.replace(ifrom,ito)
+    f1name = '../castor_locped_cfg_{0}.py'.format(argpedrun)
+    f1 = open(f1name, 'w')
+    f1.write(filestr)
+    f1.close()
+    ###retcode = subprocess.call(["chmod", "+x", f1name])
 
-f2.close()
+    f2 = open('./castor_gloraw_cfg_template.py', 'r')
+    filestr = f2.read()
 
-f2name = '../castor_gloraw_cfg_{0}{1}.py'.format(argledrun,argsuf)
-f2 = open(f2name, 'w')
-f2.write(filestr)
-f2.close()
+    for ifrom, ito in dic.iteritems():
+        filestr = filestr.replace(ifrom,ito)
 
-###
+    f2.close()
 
-f3 = open('./job_run_template.sh', 'r')
-filestr = f3.read()
+    f2name = '../castor_gloraw_cfg_{0}{1}.py'.format(argledrun,argsuf)
+    f2 = open(f2name, 'w')
+    f2.write(filestr)
+    f2.close()
 
-for ifrom, ito in dic.iteritems():
-    filestr = filestr.replace(ifrom,ito)
+    ###
 
-f3.close()
+    f3 = open('./job_run_template.sh', 'r')
+    filestr = f3.read()
 
-f3name = '../job_run{0}{1}.sh'.format(argledrun,argsuf)
-f3 = open(f3name, 'w')
-f3.write(filestr)
-f3.close()
-make_executable(f3name)
+    for ifrom, ito in dic.iteritems():
+        filestr = filestr.replace(ifrom,ito)
 
-f4 = open('./0sub_modified_template.sh', 'r')
-filestr = f4.read()
+    f3.close()
 
-for ifrom, ito in dic.iteritems():
-    filestr = filestr.replace(ifrom,ito)
+    f3name = '../job_run{0}{1}.sh'.format(argledrun,argsuf)
+    f3 = open(f3name, 'w')
+    f3.write(filestr)
+    f3.close()
+    make_executable(f3name)
 
-f4.close()
+    f4 = open('./0sub_modified_template.sh', 'r')
+    filestr = f4.read()
 
-f4name = '../0sub_modified{0}{1}.sh'.format(argledrun,argsuf)
-f4 = open(f4name, 'w')
-f4.write(filestr)
-f4.close()
-make_executable(f4name)
+    for ifrom, ito in dic.iteritems():
+        filestr = filestr.replace(ifrom,ito)
 
-print "\n\nLook the directory one level above (ls -ltr ..)\n\n"
+    f4.close()
+
+    f4name = '../0sub_modified{0}{1}.sh'.format(argledrun,argsuf)
+    f4 = open(f4name, 'w')
+    f4.write(filestr)
+    f4.close()
+    make_executable(f4name)
+
+    print "\n\nLook the directory one level above (ls -ltr ..)\n\n"
 
 # http://stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python
 def make_executable(path):
@@ -96,3 +101,5 @@ def make_executable(path):
     mode |= (mode & 0444) >> 2    # copy R bits to X
     os.chmod(path, mode)
 
+if __name__ == '__main__':
+    main()

@@ -273,18 +273,18 @@ process.cAnalyser = cms.EDAnalyzer('CastorAnalyser',
                                   vtxLabel = cms.untracked.InputTag("offlinePrimaryVertices","","RECO"),
                                   trkLabel = cms.untracked.InputTag("generalTracks","","RECO"),
                                   casDigiLabel = cms.untracked.InputTag("castorDigis","","LEDcheck"),
-                                  hfRHLabel = cms.untracked.InputTag("hfreco","","LEDcheck"), #"RECO"
-                                  hbheRHLabel = cms.untracked.InputTag("hbhereco","","LEDcheck"), #"RECO"
+                                  hfRHLabel = cms.untracked.InputTag("hfreco","","RECO"), #"RECO" "LEDcheck"
+                                  hbheRHLabel = cms.untracked.InputTag("hbhereco","","RECO"), #"RECO" "LEDcheck"
                                   ebRHLabel = cms.untracked.InputTag("ecalRecHit","EcalRecHitsEB","RECO"),
                                   eeRHLabel = cms.untracked.InputTag("ecalRecHit","EcalRecHitsEE","RECO"),
                                   casRHLabel = cms.untracked.InputTag("castorreco","","LEDcheck"), #"RECO" #"LEDcheck"
                                   casTowLabel = cms.untracked.InputTag("CastorTowerReco","","LEDcheck"), #"RECO"
                                   casJetLabel = cms.untracked.InputTag("ak5CastorJets","","LEDcheck"), #"RECO"
                                   pfEcalCluLabel = cms.untracked.InputTag("particleFlowClusterECAL","","RECO"),
-                                  pfHcalCluLabel = cms.untracked.InputTag("particleFlowClusterHCAL","","RECO"),
+                                  pfHcalCluLabel = cms.untracked.InputTag("particleFlowClusterHCAL","","RECO"), #"LEDcheck"
                                   pfHFCluLabel = cms.untracked.InputTag("particleFlowClusterHF","","LEDcheck"),
                                   pfCandLabel = cms.untracked.InputTag("particleFlow","","RECO"),
-                                  caloTowerLabel = cms.untracked.InputTag("towerMaker","","LEDcheck"), #"RECO"
+                                  caloTowerLabel = cms.untracked.InputTag("towerMaker","","RECO"), #"RECO" #"LEDcheck"
                                   genPartLabel = cms.untracked.InputTag("genParticles","","HLT"),
                                   pedFCpath = cms.untracked.string(base_path),
                                   pedFCrun  = cms.untracked.int32(229479)
@@ -338,7 +338,7 @@ particleFlowClusterHCAL.clustersSource = cms.InputTag("particleFlowClusterHBHE",
 process.PFClustersHCAL = cms.Sequence(particleFlowRecHitHBHE*particleFlowClusterHBHE*particleFlowClusterHCAL)
 #
 from RecoParticleFlow.PFClusterProducer.particleFlowRecHitHF_cfi import *
-particleFlowRecHitHF.src = cms.InputTag("hfreco","","LEDcheck")
+particleFlowRecHitHF.src = cms.InputTag("hfreco","","LEDcheck") #"LEDcheck" #"RECO"
 from RecoParticleFlow.PFClusterProducer.particleFlowClusterHF_cfi import *
 process.PFClustersHF = cms.Sequence(particleFlowRecHitHF*particleFlowClusterHF)
 # https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/RecoJets/JetProducers/python/CaloTowerSchemeB_cfi.py
@@ -410,7 +410,7 @@ process.es_pool_hcal = cms.ESSource("PoolDBESSource",
                                timetype = cms.string('runnumber'),
                                toGet = cms.VPSet(
     cms.PSet(record = cms.string("HcalRespCorrsRcd"),
-    tag = cms.string("HcalRespCorrs_updatedHBHEHFscale_Sep2015")
+    tag = cms.string("HcalRespCorrs_v5.0_offline")  #HcalRespCorrs_updatedHBHEHFscale_Sep2015(_0T)
     )
   ),
   connect = cms.string('frontier://FrontierProd/CMS_CONDITIONS'),

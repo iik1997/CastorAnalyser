@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-#/afs/cern.ch/user/k/katkov/scratch0/lhc_beams/starlight_hepforge_out_convert/zsubmit/ralf_sub2root.sh
-#/afs/cern.ch/user/k/katkov/afswork/hiforest/CMSSW_5_3_8_HI_patch2/src/cbaus/hiforest_analysis/000BATCH
 
-CPATH=/afs/cern.ch/work/k/katkov/hiforest/Tmp/CMSSW_7_4_2/src
-CWORK=/afs/cern.ch/work/k/katkov/hiforest/Tmp/CMSSW_7_4_2/test
+CPATH=/afs/cern.ch/work/k/katkov/hiforest/Tmp/CMSSW_7_4_14/src
+CWORK=/afs/cern.ch/work/k/katkov/hiforest/Tmp/CMSSW_7_4_14/test
 
 RUNSCRI=job_runargledrunargsuf.sh
 
@@ -41,5 +39,6 @@ ls -ltr
 sleep 5
 cp ${CWORK}/${RUNSCRI} ${CWORK}/${CFGFILE1} ${CWORK}/${CFGFILE2} ${CWORK}/${ENDPATH}
 mv ./${OUTFILE1} ${CWORK}/${OUTFILE2} ${CWORK}/${ENDPATH}
+cp ${CPATH}/Analysis/CastorAnalyser/plugins/CastorAnalyser.cc ${CWORK}/${ENDPATH}
 #echo /afs/cern.ch/project/eos/installation/0.2.5/bin/eos.select cp ${OUTPUTDIR}/${OUTPUT}.root /eos/cms/store/group/phys_heavyions/katkov/starlight/starlight_pythia_pPb/${OUTPUT}.root
 #rm -f ${OUTPUTDIR}/${OUTPUT}.root
