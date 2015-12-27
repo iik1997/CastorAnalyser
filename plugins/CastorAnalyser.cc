@@ -18,11 +18,12 @@
 //
 
 //////////////***********************/////////// 
-#define THIS_IS_MC
+#define THIS_IS_MC 
 #define DO_RECHITS
 /////////#define GET_BY_LABEL
+#define SW_75X
 /////////Check also ecalScaleFactor etc
-#define CM_ENERGY 13000.0 //2760.0 
+#define CM_ENERGY 5020 //13000.0 //2760.0 
 #define CASTOR_ETA -5.9
 
 // system include files
@@ -105,7 +106,14 @@
 #include "TBDataFormats/HcalTBObjects/interface/HcalTBTriggerData.h"
 
 //trigger
+#ifndef SW_75X
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#else
+#include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h" 
+#endif
+//VVV
+#include "FWCore/Common/interface/TriggerNames.h"
+//^^^
 #include "DataFormats/Common/interface/TriggerResults.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -234,7 +242,7 @@ namespace castor {
   const bool channelQuality[ForwardRecord::CSectors][ForwardRecord::CModules] =             // sector
     //mod 1   2     3     4     5      6    7     8     9    10     11    12   13    14
     {{true ,true ,true ,false,true ,true ,false,true ,true ,true ,true ,true ,true ,true }, // 1
-     {true ,true ,true ,true ,true ,true ,false,true ,true ,false,true ,true ,true ,true }, // 2
+     {true ,true ,true ,true ,false,true ,false,true ,true ,false,true ,true ,true ,true }, // 2 //----------->5TeV data: s2m5!!! <----------------<<<
      {true ,true ,true ,true ,true ,true ,false,false,false,true ,false,true ,true ,true }, // 3 //s3m9 ? 
      {true ,true ,true ,true ,true ,true ,false,false,false,true ,false,true ,false,true }, // 4
      {true ,false,true ,true ,true ,true ,false,false,false,false,true ,false,true ,true }, // 5
@@ -443,9 +451,6 @@ private:
 
 private:
 
-  HLTConfigProvider hltConfig_;
-  int triggerBit_;
-
   struct NewBunch
   {
     HcalCastorDetId detid;
@@ -567,6 +572,8 @@ private:
     uint nbGenPart;
     uint nbStat1GenPart;
     uint nbStat1ChPt250Eta2p5;
+    uint nbStat1ChEtap1p94p9;
+    uint nbStat1ChEtam3p51p5;
     uint nbStat1GenPartInBSCm;
     uint nbStat1GenPartInBSCp;
     uint nbStat1GenPartInBSC1m;
@@ -637,6 +644,14 @@ private:
   edm::InputTag _pfJetSrc;
   std::string _pedFilePath;
   int _pedFileRun;
+
+#ifndef SW_75X
+  HLTConfigProvider hltConfig_;
+#else
+  HLTPrescaleProvider hltPrescaleProvider_;
+#endif
+  int triggerBit_;
+
 
 #ifndef GET_BY_LABEL
   //tokens
@@ -766,6 +781,9 @@ CastorAnalyser::CastorAnalyser(const edm::ParameterSet& iConfig) :
   _pfJetSrc   ( iConfig.getUntrackedParameter<edm::InputTag>("pfJetLabel" ,edm::InputTag("ak4PFJets","","RECO")) ),
   _pedFilePath ( iConfig.getUntrackedParameter<std::string>("pedFCpath","/afs/cern.ch/work/k/katkov/hiforest/LEDnewB/CMSSW_7_3_0_pre2") ),
   _pedFileRun ( iConfig.getUntrackedParameter<int>("pedFCrun",239027) ) //229479
+#ifdef SW_75X
+  ,hltPrescaleProvider_(iConfig, consumesCollector(), *this) 
+#endif
 {
 
   //now do what ever initialization is needed
@@ -989,7 +1007,9 @@ CastorAnalyser::CastorAnalyser(const edm::ParameterSet& iConfig) :
 
   tree_->Branch("nbGenPart",&treeVariables_.nbGenPart,"nbGenPart/i"); 
   tree_->Branch("nbStat1GenPart",&treeVariables_.nbStat1GenPart,"nbStat1GenPart/i");
-  tree_->Branch("nbStat1ChPt250Eta2p5",&treeVariables_.nbStat1ChPt250Eta2p5,"nbStat1ChPt250Eta2p5/i");
+  tree_->Branch("nbStat1ChPt250Eta2p5",&treeVariables_.nbStat1ChPt250Eta2p5,"nbStat1ChPt250Eta2p5/i");//nbStat1ChEtap1p94p9//nbStat1ChEtam3p51p5
+  tree_->Branch("nbStat1ChEtap1p94p9",&treeVariables_.nbStat1ChEtap1p94p9,"nbStat1ChEtap1p94p9/i");
+  tree_->Branch("nbStat1ChEtam3p51p5",&treeVariables_.nbStat1ChEtam3p51p5,"nbStat1ChEtam3p51p5/i");
   tree_->Branch("nbStat1GenPartInBSCm",&treeVariables_.nbStat1GenPartInBSCm,"nbStat1GenPartInBSCm/i");
   tree_->Branch("nbStat1GenPartInBSCp",&treeVariables_.nbStat1GenPartInBSCp,"nbStat1GenPartInBSCp/i");
   tree_->Branch("nbStat1GenPartInBSC1m",&treeVariables_.nbStat1GenPartInBSC1m,"nbStat1GenPartInBSC1m/i");
@@ -1346,7 +1366,7 @@ CastorAnalyser::~CastorAnalyser()
       double corrFactor = 0.015; //ForwardRecord::absCasEscaleFactor;
       if (isData) corrFactor = castor::channelGainQE[sec-1][mod-1] * ForwardRecord::absCasEscaleFactor;
       histos2D_["h_chmeanene_map"]->SetBinContent((i1 % 14) + 1,static_cast<int>(i1/14) + 1, corrFactor * mean_of_charge); //h_charge_[i1]
-      histos2D_["h_chmeanene_bcor_map"]->SetBinContent((i1 % 14) + 1,static_cast<int>(i1/14) + 1, castor::corr0Tto38T[sec-1][mod-1] * corrFactor * mean_of_charge); //h_charge_[i1]
+      histos2D_["h_chmeanene_bcor_map"]->SetBinContent((i1 % 14) + 1,static_cast<int>(i1/14) + 1, /*castor::corr0Tto38T[sec-1][mod-1]* */corrFactor * mean_of_charge); //h_charge_[i1]
     } else {
       histos2D_["h_chmeanene_map"]->SetBinContent((i1 % 14) + 1,static_cast<int>(i1/14) + 1, 1e-5);
       histos2D_["h_chmeanene_bcor_map"]->SetBinContent((i1 % 14) + 1,static_cast<int>(i1/14) + 1, 1e-5);
@@ -1545,6 +1565,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   treeVariables_.nbGenPart = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPart = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1ChPt250Eta2p5 = static_cast<uint>(noUseValue_*noUseValue_);
+  treeVariables_.nbStat1ChEtap1p94p9 = static_cast<uint>(noUseValue_*noUseValue_);
+  treeVariables_.nbStat1ChEtam3p51p5 = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPartInBSCm = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPartInBSCp = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPartInBSC1m = static_cast<uint>(noUseValue_*noUseValue_);
@@ -1718,6 +1740,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   uint noGenPart = 0;
   uint noStat1GenPart = 0;
   uint noStat1ChPt250Eta2p5 = 0;
+  uint noStat1ChEtap1p94p9 = 0;
+  uint noStat1ChEtam3p51p5 = 0;
   uint noStat1GenPartInBSCm = 0;
   uint noStat1GenPartInBSCp = 0;
   uint noStat1GenPartInBSC1m = 0;
@@ -1744,17 +1768,33 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 #else
     iEvent.getByToken(myTokensExt_.get<6>(), triggerResults_h);
 #endif
+// https://github.com/cms-sw/cmssw/blob/CMSSW_7_4_X/HLTrigger/HLTcore/plugins/HLTEventAnalyzerAOD.cc
+// https://github.com/cms-sw/cmssw/blob/CMSSW_7_5_X/HLTrigger/HLTcore/plugins/HLTEventAnalyzerAOD.cc
     const edm::TriggerResults *triggerResults = triggerResults_h.failedToGet()? 0 : &*triggerResults_h;
     if (triggerResults) {
       bool changedConfig = false;
       bool configInitFailed = false;
+#ifndef SW_75X
       if (!hltConfig_.init(iEvent.getRun(), iSetup, "HLT", changedConfig)) {
-	edm::LogVerbatim(" hltConfig ") << "Initialization of HLTConfigProvider failed!!" << std::endl;      
+#else
+      if (!hltPrescaleProvider_.init(iEvent.getRun(), iSetup, "HLT", changedConfig)) {
+#endif
+	edm::LogVerbatim(" hltConfig ") << "Initialization of HLTConfigPrescaleProvider failed!!" << std::endl;      
 	configInitFailed = true;
       }
       if (changedConfig && !configInitFailed){
+        triggerBit_ = -1;
+#ifndef SW_75X
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        hltConfig_.dump("ProcessName");
+        hltConfig_.dump("GlobalTag");
+        hltConfig_.dump("TableName");
+        hltConfig_.dump("Streams");
+        hltConfig_.dump("Datasets");
+        hltConfig_.dump("PrescaleTable");
+        hltConfig_.dump("ProcessPSet");
+        //
 	if (_ShowDebug) edm::LogVerbatim(" hltConfig ") << " The HLTcurrentMenu is " << hltConfig_.tableName() << std::endl;
-	triggerBit_ = -1;
 	for (size_t j1 = 0; j1 < hltConfig_.triggerNames().size(); j1++) {
 	  std::pair<int,int> psValueCombo =  hltConfig_.prescaleValues(iEvent, iSetup, hltConfig_.triggerNames()[j1]); //hltPath
 	  if (TString(hltConfig_.triggerNames()[j1]).Contains(_hltPathName)) { 
@@ -1767,7 +1807,50 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	if (triggerBit_ == -1) { 
 	  edm::LogWarning(" hltConfig ") << "Reference HLT path " << _hltPathName << " not found" << std::endl;
 	} 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#else
+        //if (_ShowDebug) edm::LogVerbatim(" hltConfig ") << " The HLTcurrentMenu is " << hltPrescaleProvider_.tableName() << std::endl;
+        HLTConfigProvider const& hltConfig = hltPrescaleProvider_.hltConfigProvider();
+        const std::string triggerName = _hltPathName;
+        hltConfig.dump("Triggers"); // Dumps onto standard output !
+        hltConfig.dump("ProcessName");
+        hltConfig.dump("GlobalTag");
+        hltConfig.dump("TableName");
+        hltConfig.dump("Streams");
+        hltConfig.dump("Datasets");
+        hltConfig.dump("PrescaleTable");
+        hltConfig.dump("ProcessPSet");         
+        //
+        const unsigned int nsize(hltConfig.size());
+        //for (unsigned int j1=0; j1!=nsize; ++j1) { /*pseudoCodeAnalyzeTrigger(iEvent,iSetup,hltConfig.triggerName(j1));*/ if ( hltConfig.triggerName(j1).Contains(triggerName) ) {triggerBit_ = j1;}  }
+        const unsigned int triggerIndex(hltConfig.triggerIndex(triggerName)); 
+        if (triggerIndex>=nsize || triggerResults->size()!=nsize || triggerIndex!=iEvent.triggerNames(*triggerResults).triggerIndex(triggerName)) {
+          edm::LogVerbatim(" hltConfig ") << " Event trigger contents inconsistence " << std::endl;
+          std::cout << " triggerIndex: " << triggerIndex << " nsize: " << nsize << std::endl;
+          std::cout << " triggerResults->size(): " << triggerResults->size() << " nsize: " << nsize << std::endl;
+          std::cout << " triggerIndex: " << triggerIndex << " iEvent.triggerNames(*triggerResults).triggerIndex(triggerName): " << iEvent.triggerNames(*triggerResults).triggerIndex(triggerName) << std::endl;
+        }
+        else {
+          triggerBit_ = triggerIndex;
+          histos1D_["trigger_info"]->GetXaxis()->SetBinLabel(1,hltConfig.triggerName(triggerIndex).c_str());
+          const std::pair<int,int> prescales(hltPrescaleProvider_.prescaleValues(iEvent,iSetup,triggerName)); 
+          if (_ShowDebug) edm::LogVerbatim(" hltConfig ") << " Path " << triggerName << " [" << triggerIndex << "] "
+                          << std::endl 
+                          << " prescales L1T,HLT: " << prescales.first << "," << prescales.second
+                          << std::endl;
+          const std::pair<std::vector<std::pair<std::string,int> >,int> prescalesInDetail(hltPrescaleProvider_.prescaleValuesInDetail(iEvent,iSetup,triggerName));
+          std::ostringstream message;
+          for (unsigned int i1=0; i1<prescalesInDetail.first.size(); ++i1) {
+            message << " " << i1 << ":" << prescalesInDetail.first[i1].first << "/" << prescalesInDetail.first[i1].second;
+          }
+          if (_ShowDebug) edm::LogVerbatim(" hltConfig ") << " Path " << triggerName << " [" << triggerIndex << "] "
+                          << std::endl
+                          << " prescales L1T: " << prescalesInDetail.first.size() <<  message.str()
+                          << std::endl
+                          << " prescale  HLT: " << prescalesInDetail.second
+                          << std::endl;          
+        }
+#endif
       }
       if (triggerBit_ != -1) histos1D_["trigger_info"]->Fill(1,triggerResults->accept(triggerBit_));
     }
@@ -2025,14 +2108,17 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
           int mod = casid.module();
           if (castor::channelQuality[sec-1][mod-1]==true) {
 	    double corrFactor = 1.0; //0.015; MC should already include this factor for RecHits //ForwardRecord::absCasEscaleFactor;
-	    //if (isData) corrFactor = castor::corr0Tto38T[sec-1][mod-1] * castor::channelGainQE[sec-1][mod-1] * ForwardRecord::absCasEscaleFactor; //-> was relevant in case of prompt-reco'ed RecHits; now you try to re-reco RecHits yourself and so specify the conditions via python file pooldbsource
+	    if (isData) corrFactor = /*castor::corr0Tto38T[sec-1][mod-1]* */castor::channelGainQE[sec-1][mod-1] * ForwardRecord::absCasEscaleFactor; //-> is relevant in case of prompt-reco'ed RecHits; now you try to re-reco RecHits yourself and so specify the conditions via python file pooldbsource
 	    //PRINT sec,mod,corr for all channels
+	    if (firstTimeAnalyse_ && _ShowDebug) {edm::LogVerbatim("FTA") << "FTA" << sec << "," << mod << "," << corrFactor << std::endl;}
 	    double energy = corrFactor*casrh.energy();
             double ti     =            casrh.time();
 	    casRHE += energy;
             if (energy > casLeadRHE) { casLeadRHE = energy; casLeadRHT = ti; }
             histosProfile_["h_casenerh_vs_iz"]->Fill( static_cast<double>(mod) , energy );
             histosProfile_["h_casenerh_vs_iphi"]->Fill( static_cast<double>(sec) , energy );
+          } else {
+            if (firstTimeAnalyse_ && _ShowDebug) edm::LogVerbatim("FTA") << "FTA " << sec << "," << mod << "," << "NoNum" << std::endl;
           }
 	}
       }
@@ -2536,6 +2622,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  if (addParticle) { 
             pRapOrdObjects.push_back(obj);
             if (std::abs(obj.Eta)<2.5 && (gen.charge()>0 || gen.charge()<0) && gen.pt()>0.25) noStat1ChPt250Eta2p5++;
+            if (obj.Eta > 1.9 && obj.Eta < 4.9 && (gen.charge()>0 || gen.charge()<0)) noStat1ChEtap1p94p9++;
+            if (obj.Eta > -3.5 && obj.Eta < -1.5 && (gen.charge()>0 || gen.charge()<0)) noStat1ChEtam3p51p5++;
             if (obj.Eta > 3.23 && obj.Eta < 4.65 && (gen.charge()>0 || gen.charge()<0)) noStat1GenPartInBSCp++; //FWD-10-011: BSC=3.9<|eta|<4.4 
             if (obj.Eta > -4.65 && obj.Eta < -3.23 && (gen.charge()>0 || gen.charge()<0)) noStat1GenPartInBSCm++; //FSQ-12-005: BSC=3.23<|eta|<4.65
             if (obj.Eta > 3.9 && obj.Eta < 4.4 && (gen.charge()>0 || gen.charge()<0)) noStat1GenPartInBSC1p++;
@@ -2759,15 +2847,15 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  } //ts for-loop
         if (castor::channelQuality[secNb-1][modNb-1]==true) { 
           double corrFactor = 0.015; //ForwardRecord::absCasEscaleFactor;
-          if (isData) corrFactor = castor::corr0Tto38T[secNb-1][modNb-1] * castor::channelGainQE[secNb-1][modNb-1] * ForwardRecord::absCasEscaleFactor;
-          ////////////////////if (firstTimeAnalyse_ && _ShowDebug) edm::LogVerbatim("FTA") << "FTA " << secNb << " " << modNb << " " << corrFactor << std::endl; 
+          if (isData) corrFactor = /*castor::corr0Tto38T[secNb-1][modNb-1]* */castor::channelGainQE[secNb-1][modNb-1] * ForwardRecord::absCasEscaleFactor;
+          if (firstTimeAnalyse_ && _ShowDebug) edm::LogVerbatim("FTA") << "FTA" << secNb << "," << modNb << "," << corrFactor << std::endl; 
           casCalibratedEnergy += corrFactor * tsSum; 
           histosProfile_["h_casene_vs_iphi"]->Fill( static_cast<double>(secNb) , corrFactor * tsSum ); 
           histos1D_["h_goodch_vs_iphi"]->Fill( static_cast<double>(secNb));
           histosProfile_["h_casene_vs_iz"]->Fill( static_cast<double>(modNb) , corrFactor * tsSum );
           histos1D_["h_goodch_vs_iz"]->Fill( static_cast<double>(modNb));
         } else {
-          ////////////////////if (firstTimeAnalyse_ && _ShowDebug) edm::LogVerbatim("FTA") << "FTA " << secNb << " " << modNb << " " << "NoNum" << std::endl;
+          if (firstTimeAnalyse_ && _ShowDebug) edm::LogVerbatim("FTA") << "FTA " << secNb << "," << modNb << "," << "NoNum" << std::endl;
           if (firstTimeAnalyse_ && _ShowDebug)  { 
             if(bunch_it->detid.module()<3) edm::LogVerbatim("FTA") << "FTA " << " " <<  bunch_it->detid.zside() << " " << bunch_it->detid.sector() << " " << bunch_it->detid.module() << " CASTOR_EM 1" << std::hex << std::uppercase << bunch_it->detid.rawId() << std::dec << std::endl; 
             if(bunch_it->detid.module()>2) edm::LogVerbatim("FTA") << "FTA " << " " <<  bunch_it->detid.zside() << " " << bunch_it->detid.sector() << " " << bunch_it->detid.module() << " CASTOR_HAD 1 " << std::hex << std::uppercase << bunch_it->detid.rawId() << std::dec << std::endl;
@@ -2986,6 +3074,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     treeVariables_.nbGenPart = noGenPart;
     treeVariables_.nbStat1GenPart = noStat1GenPart;
     treeVariables_.nbStat1ChPt250Eta2p5 = noStat1ChPt250Eta2p5;
+    treeVariables_.nbStat1ChEtap1p94p9 = noStat1ChEtap1p94p9;
+    treeVariables_.nbStat1ChEtam3p51p5 = noStat1ChEtam3p51p5;
     treeVariables_.nbStat1GenPartInBSCm = noStat1GenPartInBSCm;
     treeVariables_.nbStat1GenPartInBSCp = noStat1GenPartInBSCp;
     treeVariables_.nbStat1GenPartInBSC1m = noStat1GenPartInBSC1m;

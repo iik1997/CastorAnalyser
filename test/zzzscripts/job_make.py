@@ -14,8 +14,9 @@
 #
 #
 # ./job_make.py none TuneMBRp8 \'\' 742 mc magnetOff200kv0k
-#
 # ./job_make.py 239028 247324 \'\' 7414 1200x4_1600x10_v0 ZB1zbp0ls97to291v0k
+# ./job_make.py 239028 247324 \'\' 7414 1200x4_1600x10_v0 BXQtt7ls97to291v0k
+# ./job_make.py 239028 262172 \'\' 754 1200x4_1600x10_v0 FEVTzbv2ls50to160
 #
 
 import sys, math, re, subprocess, commands, os
