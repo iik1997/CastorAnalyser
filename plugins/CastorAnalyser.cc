@@ -18,7 +18,7 @@
 //
 
 //////////////***********************/////////// 
-#define THIS_IS_MC
+#define THIS_IS_MC 
 #define DO_RECHITS
 /////////#define GET_BY_LABEL
 /////////Check also ecalScaleFactor etc
@@ -567,6 +567,8 @@ private:
     uint nbGenPart;
     uint nbStat1GenPart;
     uint nbStat1ChPt250Eta2p5;
+    uint nbStat1ChEtap1p94p9;
+    uint nbStat1ChEtam3p51p5;
     uint nbStat1GenPartInBSCm;
     uint nbStat1GenPartInBSCp;
     uint nbStat1GenPartInBSC1m;
@@ -989,7 +991,9 @@ CastorAnalyser::CastorAnalyser(const edm::ParameterSet& iConfig) :
 
   tree_->Branch("nbGenPart",&treeVariables_.nbGenPart,"nbGenPart/i"); 
   tree_->Branch("nbStat1GenPart",&treeVariables_.nbStat1GenPart,"nbStat1GenPart/i");
-  tree_->Branch("nbStat1ChPt250Eta2p5",&treeVariables_.nbStat1ChPt250Eta2p5,"nbStat1ChPt250Eta2p5/i");
+  tree_->Branch("nbStat1ChPt250Eta2p5",&treeVariables_.nbStat1ChPt250Eta2p5,"nbStat1ChPt250Eta2p5/i");//nbStat1ChEtap1p94p9//nbStat1ChEtam3p51p5
+  tree_->Branch("nbStat1ChEtap1p94p9",&treeVariables_.nbStat1ChEtap1p94p9,"nbStat1ChEtap1p94p9/i");
+  tree_->Branch("nbStat1ChEtam3p51p5",&treeVariables_.nbStat1ChEtam3p51p5,"nbStat1ChEtam3p51p5/i");
   tree_->Branch("nbStat1GenPartInBSCm",&treeVariables_.nbStat1GenPartInBSCm,"nbStat1GenPartInBSCm/i");
   tree_->Branch("nbStat1GenPartInBSCp",&treeVariables_.nbStat1GenPartInBSCp,"nbStat1GenPartInBSCp/i");
   tree_->Branch("nbStat1GenPartInBSC1m",&treeVariables_.nbStat1GenPartInBSC1m,"nbStat1GenPartInBSC1m/i");
@@ -1545,6 +1549,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   treeVariables_.nbGenPart = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPart = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1ChPt250Eta2p5 = static_cast<uint>(noUseValue_*noUseValue_);
+  treeVariables_.nbStat1ChEtap1p94p9 = static_cast<uint>(noUseValue_*noUseValue_);
+  treeVariables_.nbStat1ChEtam3p51p5 = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPartInBSCm = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPartInBSCp = static_cast<uint>(noUseValue_*noUseValue_);
   treeVariables_.nbStat1GenPartInBSC1m = static_cast<uint>(noUseValue_*noUseValue_);
@@ -1718,6 +1724,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   uint noGenPart = 0;
   uint noStat1GenPart = 0;
   uint noStat1ChPt250Eta2p5 = 0;
+  uint noStat1ChEtap1p94p9 = 0;
+  uint noStat1ChEtam3p51p5 = 0;
   uint noStat1GenPartInBSCm = 0;
   uint noStat1GenPartInBSCp = 0;
   uint noStat1GenPartInBSC1m = 0;
@@ -2536,6 +2544,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  if (addParticle) { 
             pRapOrdObjects.push_back(obj);
             if (std::abs(obj.Eta)<2.5 && (gen.charge()>0 || gen.charge()<0) && gen.pt()>0.25) noStat1ChPt250Eta2p5++;
+            if (obj.Eta > 1.9 && obj.Eta < 4.9 && (gen.charge()>0 || gen.charge()<0)) noStat1ChEtap1p94p9++;
+            if (obj.Eta > -3.5 && obj.Eta < -1.5 && (gen.charge()>0 || gen.charge()<0)) noStat1ChEtam3p51p5++;
             if (obj.Eta > 3.23 && obj.Eta < 4.65 && (gen.charge()>0 || gen.charge()<0)) noStat1GenPartInBSCp++; //FWD-10-011: BSC=3.9<|eta|<4.4 
             if (obj.Eta > -4.65 && obj.Eta < -3.23 && (gen.charge()>0 || gen.charge()<0)) noStat1GenPartInBSCm++; //FSQ-12-005: BSC=3.23<|eta|<4.65
             if (obj.Eta > 3.9 && obj.Eta < 4.4 && (gen.charge()>0 || gen.charge()<0)) noStat1GenPartInBSC1p++;
@@ -2986,6 +2996,8 @@ CastorAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     treeVariables_.nbGenPart = noGenPart;
     treeVariables_.nbStat1GenPart = noStat1GenPart;
     treeVariables_.nbStat1ChPt250Eta2p5 = noStat1ChPt250Eta2p5;
+    treeVariables_.nbStat1ChEtap1p94p9 = noStat1ChEtap1p94p9;
+    treeVariables_.nbStat1ChEtam3p51p5 = noStat1ChEtam3p51p5;
     treeVariables_.nbStat1GenPartInBSCm = noStat1GenPartInBSCm;
     treeVariables_.nbStat1GenPartInBSCp = noStat1GenPartInBSCp;
     treeVariables_.nbStat1GenPartInBSC1m = noStat1GenPartInBSC1m;
